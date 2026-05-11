@@ -4,23 +4,56 @@ import java.util.ArrayList;
 
 
 public class Parser {
-	Interpreter interpreter= new Interpreter();
+	Program program= new Program();
 	int item=0;
 	ArrayList<Token> tokens;
 	
 	public Parser(ArrayList<Token> tokens) {
 		this.tokens= tokens;
+		Evalif();
+		Evalbinary();
+		Evalprint();
+		Evalassignment();
 	}
 	
 	public If Evalif() {
 		If iff = null;
 		ArrayList<Statement> statement = new ArrayList<Statement>();
 		ArrayList<Expression> expression = new ArrayList<Expression>();
+		ArrayList<Literal> literals= new ArrayList<>();
+		Literal literal;
+		String operator;
 		if (tokens.get(item).type==Type.iff) {
 			item++;
 			if (tokens.get(item).type==Type.lparen) {
 				item++;
 				while (tokens.get(item).type!=Type.rparen) {
+					if (tokens.get(item).type!=Type.literal) {
+						System.out.println("put condition first");
+						break;
+					}
+					else {
+						item++;
+						literal= new Literal(tokens.get(item).token);
+						literals.add(literal);
+						if (tokens.get(item).type==Type.bigger || tokens.get(item).type==Type.smaller || tokens.get(item).type==Type.equal || tokens.get(item).type==Type.notequal) {
+							operator= (String) tokens.get(item).token;
+							item++;
+							if ((tokens.get(item-2).token instanceof String)!=(tokens.get(item).token instanceof String) || (tokens.get(item-2).token instanceof Integer)!=(tokens.get(item).token instanceof Integer)) {
+								System.out.println("must compare same type");
+								break;
+							}
+							else {
+								literal= new Literal(tokens.get(item).token);
+								literals.add(literal);
+								item++;
+							}
+						}
+						else {
+							System.out.println("must add condition");
+							break;
+						}
+					}
 					if (tokens.get(item).type==Type.eof) {
 						System.out.println("must close parenthesis");
 						break;
@@ -31,13 +64,15 @@ public class Parser {
 					if (tokens.get(item).type==Type.string || tokens.get(item).type==Type.integer) {
 						expression.add(Evalbinary());
 					} 
-					//add exceptions
 					item++;
 				}
 			}
-			iff= new If(statement, expression);
+			iff= new If(statement, expression, literals);
 		}
-		interpreter.statements.add(iff);
+		else {
+			System.out.println("wrong if");
+		}
+		program.statements.add(iff);
 		return iff;
 	}
 	public BinaryExpression Evalbinary() {
@@ -62,11 +97,11 @@ public class Parser {
 					}
 				}
 				else {
-
+					System.out.println("wrong types");
 				}
 			}
 			else {
-
+				System.out.println("wrong operator");
 			}
 		}
 		
@@ -92,13 +127,13 @@ public class Parser {
 		if (Integer.parseInt(right)==(int)Integer.parseInt(right) && Integer.parseInt(left)==(int)Integer.parseInt(left) || right== (String)right && left== (String)left) {
 			be= new BinaryExpression(left, right, operator);
 		}
-		interpreter.expressions.add(be);
+		program.expressions.add(be);
 		return be;
 	}
 	public Print Evalprint() {
 		Print print = null;
 		if (tokens.get(item).type==Type.print) {
-			StringBuilder builder = null;
+			StringBuilder builder= new StringBuilder();
 			String value = null;
 			while (tokens.get(item).type!=Type.rparen) {
 				if (tokens.get(item).type!=Type.string && tokens.get(item).type!=Type.rparen) {
@@ -108,7 +143,6 @@ public class Parser {
 				else {
 					if (tokens.get(item).type!= Type.rparen) {
 						
-						builder= new StringBuilder();
 						builder.append(tokens.get(item).toString());
 					}
 					else {
@@ -117,12 +151,12 @@ public class Parser {
 				}
 				item++;
 			}
-			if (tokens.get(item+1).type!=Type.semicolon) {
+			if (item<tokens.size() && tokens.get(item+1).type!=Type.semicolon) {
 				System.out.println("expected end of print statement");
 			}
-			print= new Print();
+			print= new Print(value);
 	}
-		interpreter.statements.add(print);
+		program.statements.add(print);
 		return print;
 }
 	public Statement Evalassignment() {
@@ -151,7 +185,8 @@ public class Parser {
 				}
 			}
 		}
-		interpreter.statements.add(assignment);
+		program.statements.add(assignment);
 		return assignment;
 	}
+	Interpreter interpreter= new Interpreter(program);
 }
