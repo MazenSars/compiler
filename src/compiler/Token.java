@@ -3,10 +3,10 @@ package compiler;
 import compiler.Token;
 
 public class Token {
-	Object token;
+	Object value;
 	Type type;
-	public Token (Object token,Type type) {
-		this.token= token;
+	public Token (Object value,Type type) {
+		this.value= value;
 		this.type= type;
 	}
 }

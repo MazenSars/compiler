@@ -1,15 +1,15 @@
 package compiler;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class If extends Statement {
-	ArrayList<Statement> statements= new ArrayList<>();
-	ArrayList<Expression> expressions= new ArrayList<>();
-	ArrayList<Literal> literals;
-	
-	public If(ArrayList<Statement> statements, ArrayList<Expression> expressions, ArrayList<Literal> literals) {
-		this.statements= statements;
-		this.expressions= expressions;
-		this.literals= literals;
-	}
+	public Expression condition;
+    public List<Statement> thenBody = new ArrayList<>();
+    public List<Statement> elseBody = new ArrayList<>();
+    public If(Expression condition, List<Statement> thenBody, List<Statement> elseBody) {
+        this.condition = condition;
+        this.thenBody = thenBody;
+        this.elseBody = elseBody;
+    }
 }

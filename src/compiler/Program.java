@@ -1,11 +1,8 @@
 package compiler;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Program {
-	//how to do
-	ArrayList<Expression> expressions = new ArrayList<Expression>();
-	ArrayList<Statement> statements = new ArrayList<Statement>();
-	
-	
+	 public List<Statement> statements = new ArrayList<>();
 }

@@ -4,69 +4,75 @@ import java.util.ArrayList;
 import javax.xml.stream.events.EndDocument;
 
 public class Lexer {
-	int pos;
-	ArrayList<Token> tokens= new ArrayList<Token>();
-	StringBuilder builder;
-	Parser parse;
+	Parser parser;
 	public Lexer(String code) {
-		while (pos<code.length()) {
-		char ch= code.charAt(pos);
-		if (Character.isWhitespace(ch)) {
+		ArrayList<Token> tokens= new ArrayList<Token>();
+		StringBuilder builder;
+		int pos=0;
+		while (pos<code.length()-1) {
+		if (Character.isWhitespace(code.charAt(pos))) {
+			System.out.println("in whitespace");
 			pos++;
 			continue;
 		}
-		switch (ch) {
-		case '+': tokens.add(new Token(ch, Type.add)); pos++; break;
-		case '-': tokens.add(new Token(ch, Type.sub)); pos++; break;
-		case '*': tokens.add(new Token(ch, Type.mult)); pos++; break;
-		case '/': tokens.add(new Token(ch, Type.div)); pos++; break;
-		case '(': tokens.add(new Token(ch, Type.lparen)); pos++; break;
-		case ')': tokens.add(new Token(ch, Type.rparen)); pos++; break;
-		case '{': tokens.add(new Token(ch, Type.lbraket)); pos++; break;
-		case '}': tokens.add(new Token(ch, Type.rbraket)); pos++; break;
-		case ';': tokens.add(new Token(ch, Type.semicolon)); pos++; break;
+		switch (code.charAt(pos)) {
+		case '+': tokens.add(new Token(code.charAt(pos), Type.add)); pos++; break;
+		case '-': tokens.add(new Token(code.charAt(pos), Type.sub)); pos++; break;
+		case '*': tokens.add(new Token(code.charAt(pos), Type.mult)); pos++; break;
+		case '/': tokens.add(new Token(code.charAt(pos), Type.div)); pos++; break;
+		case '(': tokens.add(new Token(code.charAt(pos), Type.lparen)); pos++; break;
+		case ')': tokens.add(new Token(code.charAt(pos), Type.rparen)); pos++; break;
+		case '{': tokens.add(new Token(code.charAt(pos), Type.lbraket)); pos++; break;
+		case '}': tokens.add(new Token(code.charAt(pos), Type.rbraket)); pos++; break;
+		case ';': tokens.add(new Token(code.charAt(pos), Type.semicolon)); pos++; break;
 		case '=': if (code.charAt(pos+1)=='=') {
 			tokens.add(new Token("==", Type.equal));
 			pos+=2;
 		}
 		else {
-			tokens.add(new Token(ch,Type.equal));
+			tokens.add(new Token(code.charAt(pos),Type.equal));
 			pos++;
 		}
 		case '!': if (code.charAt(pos+1)=='=') {
-			tokens.add(new Token(ch, Type.notequal)); pos+=2; break;
+			tokens.add(new Token(code.charAt(pos), Type.notequal)); pos+=2; break;
 		}
+		case '>': tokens.add(new Token(code.charAt(pos), Type.bigger)); pos++; break;
+		case '<': System.out.println(pos); tokens.add(new Token(code.charAt(pos), Type.smaller)); pos++; break;
+		default: pos++; break;
 		}
-		if (Character.isDigit(ch)) {
+		if (Character.isDigit(code.charAt(pos))) {
+			System.out.println("in digit");
 			builder= new StringBuilder();
-			while (Character.isDigit(ch)) {
-				builder.append(ch);
+			while (Character.isDigit(code.charAt(pos))) {
+				builder.append(code.charAt(pos));
 				pos++;
 			}
 			tokens.add(new Token(builder.toString(), Type.integer));
-			break;
 		}
-		if (Character.isLetter(ch)) {
+		
+		if (Character.isLetter(code.charAt(pos))) {
+			System.out.println("in letter");
 			builder= new StringBuilder();
 			String str;
-			while (Character.isLetter(ch)) {
-				builder.append(ch);
+			while (Character.isLetter(code.charAt(pos))) {
+				builder.append(code.charAt(pos));
 				pos++;
 			}
 			str= builder.toString();
+			System.out.println(str);
+			System.out.println(pos);
 			switch (str) {
-			case "if": tokens.add(new Token(str, Type.iff));
-			case "print": tokens.add(new Token(str, Type.print));
-			case "func": tokens.add(new Token(str, Type.func));
-			case "else": tokens.add(new Token(str, Type.elsee));
-			case "var": tokens.add(new Token(str, Type.var));
-			case "int": tokens.add(new Token(str, Type.integer));
-			case "str": tokens.add(new Token(str, Type.string));
+			case "if": tokens.add(new Token(str, Type.iff)); break;
+			case "print": tokens.add(new Token(str, Type.print)); break;
+			case "func": tokens.add(new Token(str, Type.func)); break;
+			case "else": tokens.add(new Token(str, Type.elsee)); break;
+			case "var": tokens.add(new Token(str, Type.var)); break;
+			case "int": tokens.add(new Token(str, Type.integer)); break;
+			case "str": tokens.add(new Token(str, Type.string));break;
 			}
-			break;
 		}
 		}
 		tokens.add(new Token(null, Type.eof));
-		parse= new Parser(tokens);
+		parser= new Parser(tokens);
 	}
 }

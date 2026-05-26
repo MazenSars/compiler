@@ -1,9 +1,6 @@
 package compiler;
 
 public class Print extends Statement {
-	String value;
-	
-	public Print(String value) {
-		this.value= value;
-	}
+	 public Expression value;
+	 public Print(Expression value) { this.value = value; }
 }

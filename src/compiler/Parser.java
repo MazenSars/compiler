@@ -1,192 +1,121 @@
 package compiler;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class Parser {
-	Program program= new Program();
-	int item=0;
-	ArrayList<Token> tokens;
-	
-	public Parser(ArrayList<Token> tokens) {
-		this.tokens= tokens;
-		Evalif();
-		Evalbinary();
-		Evalprint();
-		Evalassignment();
-	}
-	
-	public If Evalif() {
-		If iff = null;
-		ArrayList<Statement> statement = new ArrayList<Statement>();
-		ArrayList<Expression> expression = new ArrayList<Expression>();
-		ArrayList<Literal> literals= new ArrayList<>();
-		Literal literal;
-		String operator;
-		if (tokens.get(item).type==Type.iff) {
-			item++;
-			if (tokens.get(item).type==Type.lparen) {
-				item++;
-				while (tokens.get(item).type!=Type.rparen) {
-					if (tokens.get(item).type!=Type.literal) {
-						System.out.println("put condition first");
-						break;
-					}
-					else {
-						item++;
-						literal= new Literal(tokens.get(item).token);
-						literals.add(literal);
-						if (tokens.get(item).type==Type.bigger || tokens.get(item).type==Type.smaller || tokens.get(item).type==Type.equal || tokens.get(item).type==Type.notequal) {
-							operator= (String) tokens.get(item).token;
-							item++;
-							if ((tokens.get(item-2).token instanceof String)!=(tokens.get(item).token instanceof String) || (tokens.get(item-2).token instanceof Integer)!=(tokens.get(item).token instanceof Integer)) {
-								System.out.println("must compare same type");
-								break;
-							}
-							else {
-								literal= new Literal(tokens.get(item).token);
-								literals.add(literal);
-								item++;
-							}
-						}
-						else {
-							System.out.println("must add condition");
-							break;
-						}
-					}
-					if (tokens.get(item).type==Type.eof) {
-						System.out.println("must close parenthesis");
-						break;
-					}
-					if (tokens.get(item).type==Type.print) {
-						statement.add(Evalprint());
-			}
-					if (tokens.get(item).type==Type.string || tokens.get(item).type==Type.integer) {
-						expression.add(Evalbinary());
-					} 
-					item++;
-				}
-			}
-			iff= new If(statement, expression, literals);
-		}
-		else {
-			System.out.println("wrong if");
-		}
-		program.statements.add(iff);
-		return iff;
-	}
-	public BinaryExpression Evalbinary() {
-		BinaryExpression be = null;
-		String operator = null;
-		String left = null;
-		String right = null;
-		if (tokens.get(item).type==Type.integer) {
-			left= tokens.get(item).toString();
-			item++;
-			if (tokens.get(item).type==Type.add || tokens.get(item).type==Type.sub || tokens.get(item).type==Type.mult || tokens.get(item).type==Type.div) {
-				operator= tokens.get(item).toString();
-				item++;
-				if (tokens.get(item).type==Type.integer) {
-					right= tokens.get(item).toString();
-					item++;
-					if (tokens.get(item).type==Type.semicolon) {
-						item++;
-					}
-					else {
-						Evalbinary();
-					}
-				}
-				else {
-					System.out.println("wrong types");
-				}
-			}
-			else {
-				System.out.println("wrong operator");
-			}
-		}
-		
-		if (tokens.get(item).type==Type.string) {
-			item++;
-			right= tokens.get(item).toString();
-			if (tokens.get(item).type==Type.add) {
-				operator= tokens.get(item).toString();
-				item++;
-				if (tokens.get(item).type==Type.string) {
-					item++;
-					left=tokens.get(item).toString();
-					if (tokens.get(item).type==Type.semicolon) {
-						item++;
-					}
-				}
-				else {
-				}
-			}
-			else {
-			}
-		}
-		if (Integer.parseInt(right)==(int)Integer.parseInt(right) && Integer.parseInt(left)==(int)Integer.parseInt(left) || right== (String)right && left== (String)left) {
-			be= new BinaryExpression(left, right, operator);
-		}
-		program.expressions.add(be);
-		return be;
-	}
-	public Print Evalprint() {
-		Print print = null;
-		if (tokens.get(item).type==Type.print) {
-			StringBuilder builder= new StringBuilder();
-			String value = null;
-			while (tokens.get(item).type!=Type.rparen) {
-				if (tokens.get(item).type!=Type.string && tokens.get(item).type!=Type.rparen) {
-					System.out.println("must print string");
-					break;
-				}
-				else {
-					if (tokens.get(item).type!= Type.rparen) {
-						
-						builder.append(tokens.get(item).toString());
-					}
-					else {
-						value= builder.toString();
-					}
-				}
-				item++;
-			}
-			if (item<tokens.size() && tokens.get(item+1).type!=Type.semicolon) {
-				System.out.println("expected end of print statement");
-			}
-			print= new Print(value);
-	}
-		program.statements.add(print);
-		return print;
-}
-	public Statement Evalassignment() {
-		String literal;
-		Object value;
-		Assignment assignment = null;
-		if (tokens.get(item).type==Type.var) {
-			item++;
-			if (tokens.get(item).type==Type.string) {
-				literal= tokens.get(item).toString();
-				item++;
-				if (tokens.get(item).type==Type.semicolon) {
-					Literal lit= new Literal(literal);
-				}
-				else {
-					if (tokens.get(item).type==Type.assign) {
-						item++;
-						if (tokens.get(item).type==Type.string || tokens.get(item).type==Type.integer) {
-							item++;
-							value= tokens.get(item).toString();
-							if (tokens.get(item).type==Type.semicolon) {
-								assignment= new Assignment(literal, value);
-							}
-						}
-					}
-				}
-			}
-		}
-		program.statements.add(assignment);
-		return assignment;
-	}
-	Interpreter interpreter= new Interpreter(program);
+	private final List<Token> tokens;
+    private int pos;
+
+    public Parser(List<Token> tokens) {
+        this.tokens = tokens;
+        this.pos = 0;
+    }
+
+    // ENTRY POINT: Loops until EOF, collects all top-level statements
+    public Program parse() {
+        Program program = new Program();
+        while (!isAtEnd()) {
+            program.statements.add(parseStatement());
+        }
+        return program;
+    }
+
+    // ROUTER: Looks at current token and dispatches to correct parser
+    private Statement parseStatement() {
+        if (check(Type.print)) return parsePrint();
+        if (check(Type.iff)) return parseIf();
+        if (check(Type.identifier) && peek(1).type == Type.assign) return parseAssignment();
+        
+        // Fallback: treat as expression statement (e.g., 5 + 3;)
+        Expression expr = parseExpression();
+        consume(Type.semicolon);
+        return new ExpressionStatement(expr);
+    }
+ // FIX #1, #6, #10: Dedicated method, reuses parseExpression for condition
+    private Statement parseIf() {
+        consume(Type.iff);
+        consume(Type.lparen);
+        Expression condition = parseExpression(); // Reuses expression logic
+        consume(Type.rparen);
+        consume(Type.lbraket);
+
+        List<Statement> thenBody = new ArrayList<>();
+        while (!check(Type.rbraket) && !isAtEnd()) {
+            thenBody.add(parseStatement()); // FIX #4, #5: Recursively builds Node tree
+        }
+        consume(Type.rbraket);
+
+        List<Statement> elseBody = new ArrayList<>();
+        if (check(Type.elsee)) {
+            consume(Type.elsee);
+            consume(Type.lbraket);
+            while (!check(Type.rbraket) && !isAtEnd()) {
+                elseBody.add(parseStatement());
+            }
+            consume(Type.rbraket);
+        }
+
+        return new If(condition, thenBody, elseBody);
+    }
+    private Statement parsePrint() {
+        consume(Type.print);
+        consume(Type.lparen);
+        Expression value = parseExpression(); // FIX #7: Parses value as expression, not raw tokens
+        consume(Type.rparen);
+        consume(Type.semicolon);
+        return new Print(value);
+    }
+
+    private Statement parseAssignment() {
+        Token name = consume(Type.identifier);
+        consume(Type.assign);
+        Expression value = parseExpression();
+        consume(Type.semicolon);
+        return new Assignment((String)name.value, value);
+    }
+
+    // FIX #4, #5, #12: Nodes contain Nodes. Left-to-right parsing with operator handling
+    private Expression parseExpression() {
+        Expression left = parsePrimary();
+        
+        while (check(Type.add) || check(Type.sub) || check(Type.mult) || check(Type.div) ||
+               check(Type.bigger) || check(Type.smaller) || check(Type.equal) || check(Type.notequal)) {
+            
+            Type opType = advance().type;
+            String operator = opType.toString(); // e.g., "add", "bigger"
+            Expression right = parsePrimary();
+            left = new BinaryExpression(left, operator, right); // FIX #5: Captures and nests result
+        }
+        return left;
+    }
+ // FIX #6, #9: Handles literals, variables, and parentheses. NO type checking here.
+    private Expression parsePrimary() {
+        if (check(Type.integer) || check(Type.string)) {
+            Token t = advance();
+            return new Literal(t.value); // FIX #9: Store raw value, check types later in Interpreter
+        }
+        if (check(Type.identifier)) {
+            return new Variable((String) advance().value);
+        }
+        if (check(Type.lparen)) {
+            consume(Type.lparen);
+            Expression expr = parseExpression(); // FIX #6: Recursion handles nesting
+            consume(Type.rparen);
+            return expr;
+        }
+        throw new RuntimeException("Expected expression but got: " + peek().type);
+    }
+
+    // SAFE ACCESS HELPERS (Fixes #3, bounds errors)
+    private boolean isAtEnd() { return peek().type == Type.eof; }
+    private Token peek() { return tokens.get(pos); }
+    private Token peek(int offset) { return tokens.get(pos + offset); }
+    private Token advance() { if (!isAtEnd()) pos++; return tokens.get(pos - 1); }
+    private boolean check(Type type) { return !isAtEnd() && peek().type == type; }
+    private Token consume(Type type) {
+        if (check(type)) return advance();
+        throw new RuntimeException("Expected " + type + " but found " + peek().type);
+    }
 }
