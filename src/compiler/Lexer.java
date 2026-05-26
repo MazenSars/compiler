@@ -5,10 +5,10 @@ import javax.xml.stream.events.EndDocument;
 
 public class Lexer {
 	Parser parser;
+	ArrayList<Token> tokens= new ArrayList<Token>();
 	public Lexer(String code) {
-		ArrayList<Token> tokens= new ArrayList<Token>();
-		StringBuilder builder;
 		int pos=0;
+		StringBuilder builder;
 		while (pos<code.length()-1) {
 		if (Character.isWhitespace(code.charAt(pos))) {
 			System.out.println("in whitespace");
