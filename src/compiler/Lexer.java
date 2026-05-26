@@ -1,7 +1,6 @@
 package compiler;
 
 import java.util.ArrayList;
-import javax.xml.stream.events.EndDocument;
 
 public class Lexer {
 	Parser parser;
